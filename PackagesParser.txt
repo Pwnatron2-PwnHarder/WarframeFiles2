@@ -1,0 +1,119 @@
+package Mk2.PackagesParser;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.LinkedList;
+
+/**
+ * Main driving class for this
+ * 
+ * File Structure, apparently: Packages.bin- Hash, 0x1d bytes Number of Entries,
+ * Int32
+ * 
+ * Entry- EntryNameLength, Int32 EntryName, EntrynameLength
+ * 
+ *
+ */
+public class PackagesParser
+	{
+		public static void main(String[] args)
+			{
+				PackagesParser bob = new PackagesParser();
+
+				Package[] ProcessedFile = bob.ProcessFile(ConstantAutobot.getPackagesDir(), new ProgressMonitor(4));
+
+				// System.out.println(ProcessedFile[0].toString());
+			}
+
+		public PackagesParser()
+			{
+
+			}
+
+		public Package[] ProcessFile(String inDir, ProgressMonitor inMon)
+			{
+				ByteArrayIterator Train = new ByteArrayIterator(inDir, inMon);
+				Package[] result;
+				double FileSize = Train.getFileSize();
+
+				// All vars ripped from file
+				byte[] Hash = Train.getNextSubArray(0, ConstantAutobot.getPackagesHashSize());
+				// System.out.println(Train.getNextInt());
+				TopStruct[] TopStructs = new TopStruct[Train.getNextInt()];
+
+				for (int i = 0; i < TopStructs.length; i++)
+					{
+						int HeaderSize = Train.getNextInt();
+
+						String Header = Train.getNextString(HeaderSize);
+						// System.out.println(Header);
+
+						TopStructs[i] = new TopStruct(Header, Train.getNextInt());
+					}
+
+				inMon.LogProgress(0);
+				// System.out.println("Header processing complete. Overall file progress: "
+				// + ((double) Train.getProgress() * 100 / FileSize) + "%");
+
+				int numChars = Train.getNextInt();
+				LinkedList<String> Chunks = new LinkedList<String>();
+
+				for (int i = 0; i < numChars; i++)
+					{
+						StringBuilder tempResult = new StringBuilder();
+						byte CurrByte = Train.getNextByte();
+
+						while (CurrByte != 0)
+							{
+								tempResult.append((char) CurrByte);
+								i++;
+								CurrByte = Train.getNextByte();
+							}
+
+						// System.out.println("Chunk added: " + tempResult);
+
+						Chunks.add(tempResult.toString());
+					}
+
+				inMon.LogProgress(0);
+				int NumChunks = Train.getNextInt();
+				result = new Package[NumChunks];
+
+				PrintWriter printWriter = null;
+				try
+					{
+						printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ConstantAutobot.getOutputDir())));
+					}
+				catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				for (int i = 0; i < NumChunks; i++)
+					{
+						String path = Train.getNextString(Train.getNextInt());
+						String name = Train.getNextString(Train.getNextInt());
+
+						// Unsure why this is happening
+						Train.stall(5);
+
+						String baseName = Train.getNextString(Train.getNextInt());
+
+						// Unsure why this is happening
+						Train.stall(4);
+
+						Package resultPack = new Package(name, baseName, Chunks.get(i), path);
+						//result[i] = resultPack;
+						printWriter.println(resultPack.toString());
+					}
+				inMon.LogProgress(0);
+
+				Train.CloseStream();
+				printWriter.close();
+
+				return result;
+			}
+	}
