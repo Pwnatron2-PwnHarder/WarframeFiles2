@@ -1,0 +1,15 @@
+{
+PackageName=GrnAssaultRifle
+BaseName=/Lotus/Types/Game/AutoStoreItem
+HeaderPath=/Lotus/StoreItems/Weapons/Grineer/LongGuns/GrineerAssaultRifle/
+ProductCategory=LongGuns
+LocalizeTag=/Lotus/Language/Items/GrineerAssaultRifleName
+LocalizeDescTag=/Lotus/Language/Items/GrineerAssaultRifleDesc
+IconTexture=/Lotus/Interface/Icons/Store/GrineerAssaultRifle.png
+TypeName=/Lotus/Weapons/Grineer/LongGuns/GrineerAssaultRifle/GrnAssaultRifle
+PremiumPrice=125
+SellingPrice=7500
+ExcludeFromCodex=0
+AvailableOnPvp=1
+
+}
